@@ -25,30 +25,49 @@ G.add_edges_from(edges)
 
 # Position graph nodes using spring layout
 pos = nx.spring_layout(G, seed=42)
-edge_trace = go.Scatter(
-    x=[], y=[], line=dict(width=1, color='#888'), hoverinfo='none', mode='lines'
-)
+
+# Create edge coordinates
+edge_x = []
+edge_y = []
 for src, dst in G.edges():
     x0, y0 = pos[src]
     x1, y1 = pos[dst]
-    edge_trace['x'] += [x0, x1, None]
-    edge_trace['y'] += [y0, y1, None]
+    edge_x += [x0, x1, None]
+    edge_y += [y0, y1, None]
 
-node_trace = go.Scatter(
-    x=[], y=[], text=[], mode='markers+text', textposition="bottom center",
-    hoverinfo='text', marker=dict(
-        showscale=False, color=[], size=20, line_width=2
-    )
+edge_trace = go.Scatter(
+    x=edge_x, y=edge_y,
+    line=dict(width=1, color='#888'),
+    hoverinfo='none',
+    mode='lines'
 )
+
+# Create node coordinates and colors
+node_x = []
+node_y = []
+node_color = []
+node_text = []
 
 for node in G.nodes():
     x, y = pos[node]
-    node_trace['x'] += [x]
-    node_trace['y'] += [y]
+    node_x.append(x)
+    node_y.append(y)
     direction = G.nodes[node]['direction']
     color = 'green' if direction == 1 else 'red' if direction == -1 else 'gray'
-    node_trace['marker']['color'] += [color]
-    node_trace['text'] += [node]
+    node_color.append(color)
+    node_text.append(node)
+
+node_trace = go.Scatter(
+    x=node_x, y=node_y, text=node_text,
+    mode='markers+text', textposition="bottom center",
+    hoverinfo='text',
+    marker=dict(
+        showscale=False,
+        color=node_color,
+        size=20,
+        line_width=2
+    )
+)
 
 # Sample metrics data
 df_metrics = pd.DataFrame({
@@ -66,7 +85,7 @@ app.layout = html.Div([
         'layout': go.Layout(
             showlegend=False,
             hovermode='closest',
-            margin=dict(b=20,l=5,r=5,t=40),
+            margin=dict(b=20, l=5, r=5, t=40),
             xaxis=dict(showgrid=False, zeroline=False),
             yaxis=dict(showgrid=False, zeroline=False)
         )
